@@ -1,0 +1,883 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1020">
+<title>ColorLab | Colour Picker</title>
+
+<style>
+:root {
+  --accent: #6366f1;
+  --panel: rgba(10, 18, 38, .78);
+  --border: rgba(255,255,255,.17);
+  --muted: #b5c3df;
+  --text: #f5f7ff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: system-ui, Arial, sans-serif;
+
+  /* YOUR IMAGE IS ONLY THE OUTER BACKGROUND */
+  background-image:
+    linear-gradient(rgba(4,8,22,.35), rgba(4,8,22,.52)),
+    url("background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+button, input { font: inherit; }
+button { cursor: pointer; }
+
+.topbar {
+  max-width: 1500px;
+  margin: auto;
+  padding: 25px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.brand { display: flex; align-items: center; gap: 13px; }
+
+.logo {
+  width: 49px;
+  height: 49px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: var(--accent);
+  font-size: 27px;
+}
+
+h1 { margin: 0; font-size: clamp(25px,4vw,34px); }
+.subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.tagline { color: #c4b5fd; font-style: italic; }
+
+.workspace {
+  max-width: 1500px;
+  margin: auto;
+  padding: 0 22px 30px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.panel {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--panel);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.24);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 750;
+  margin-bottom: 15px;
+}
+
+.picker-layout {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 23px;
+  gap: 12px;
+}
+
+.saturation {
+  height: 245px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid #ffffff30;
+  cursor: crosshair;
+  touch-action: none;
+  background:
+    linear-gradient(to top,#000,transparent),
+    linear-gradient(to right,#fff,transparent),
+    hsl(239,100%,50%);
+}
+
+.marker {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #0008;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+
+.hue {
+  width: 23px;
+  height: 245px;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 9px;
+  cursor: pointer;
+  touch-action: none;
+  background: linear-gradient(to top,red,#ff0,#0f0,#0ff,#00f,#f0f,red);
+}
+
+.hue::-webkit-slider-thumb {
+  appearance: none;
+  width: 29px;
+  height: 18px;
+  border: 3px solid white;
+  border-radius: 12px;
+  background: transparent;
+}
+
+.hue::-moz-range-thumb {
+  width: 22px;
+  height: 14px;
+  border: 3px solid white;
+  border-radius: 12px;
+  background: transparent;
+}
+
+.label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+
+input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  padding: 11px;
+  color: white;
+  background: rgba(3,9,24,.6);
+  border: 1px solid #465776;
+  border-radius: 9px;
+  outline: none;
+}
+
+input[type="text"]:focus { border-color: var(--accent); }
+
+.color-fields {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 13px;
+  margin-top: 17px;
+}
+
+input[type="color"] {
+  width: 100%;
+  height: 44px;
+  padding: 2px;
+  cursor: pointer;
+  border: 1px solid #ffffff40;
+  border-radius: 9px;
+  background: transparent;
+}
+
+.hex-row { display: flex; gap: 7px; }
+
+.btn {
+  color: white;
+  background: rgba(18,30,54,.9);
+  border: 1px solid #435675;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.btn:hover { border-color: var(--accent); }
+
+.swatch {
+  height: 52px;
+  border-radius: 10px;
+  margin-top: 12px;
+  border: 1px solid #ffffff30;
+}
+
+.stats { margin-top: 13px; font-size: 13px; }
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ffffff13;
+}
+
+.stat span:first-child { color: var(--muted); }
+.stat span:last-child { text-align: right; overflow-wrap: anywhere; }
+
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+.presets { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.preset {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #ffffff30;
+  border-radius: 10px;
+  padding: 0;
+}
+
+.preset.active { outline: 2px solid white; outline-offset: 3px; }
+
+.code-card {
+  margin-top: 12px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(3,9,24,.65);
+}
+
+.code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+pre {
+  margin: 0;
+  color: #e0e7ff;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 12px/1.8 ui-monospace, monospace;
+}
+
+.tip {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  background: rgba(3,9,24,.45);
+}
+
+.preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.mode-group { display: flex; gap: 5px; }
+.mode-btn.active { background: var(--accent); border-color: var(--accent); }
+
+.browser {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #ffffff28;
+  background: #fff;
+}
+
+.browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #101a2e;
+}
+
+.dots { display: flex; gap: 5px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+
+.address {
+  flex: 1;
+  min-width: 0;
+  padding: 7px;
+  border-radius: 6px;
+  color: #d6e1f5;
+  background: #1b2b48;
+  font-size: 11px;
+}
+
+.site {
+  --site-bg: #fff;
+  --site-text: #182448;
+  --site-muted: #52658b;
+  background: var(--site-bg);
+  color: var(--site-text);
+  transition: background .2s,color .2s;
+}
+
+.site.dark {
+  --site-bg: #101827;
+  --site-text: #edf2ff;
+  --site-muted: #b3c0da;
+}
+
+.site-nav {
+  padding: 14px;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-brand { font-weight: 800; font-size: 19px; }
+.site-links { display: flex; gap: 10px; font-size: 10px; }
+.site-links a { color: white; text-decoration: none; }
+
+.hero { padding: 27px 17px 22px; }
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.hero h2 {
+  font-size: clamp(22px,3vw,34px);
+  line-height: 1.15;
+  margin: 0 0 12px;
+}
+
+.hero h2 span { color: var(--accent); }
+
+.hero p {
+  color: var(--site-muted);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.cta {
+  background: var(--accent);
+  color: white;
+  border: 0;
+  border-radius: 30px;
+  padding: 11px 14px;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.art {
+  aspect-ratio: 1/.85;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: color-mix(in srgb,var(--accent) 14%,var(--site-bg));
+}
+
+.art-inner {
+  width: 72%;
+  height: 65%;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--accent);
+  color: white;
+  font-size: 40px;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 8px;
+  padding: 0 14px 25px;
+}
+
+.feature {
+  min-width: 0;
+  padding: 10px 8px;
+  border: 1px solid color-mix(in srgb,var(--accent) 30%,transparent);
+  border-radius: 10px;
+}
+
+.feature-icon { color: var(--accent); font-size: 22px; }
+.feature h3 { font-size: 12px; margin: 7px 0; }
+.feature p { font-size: 10px; color: var(--site-muted); line-height: 1.6; margin: 0; }
+
+.work { padding: 0 14px 25px; }
+.work h3 { margin-bottom: 4px; }
+.work > p { color: var(--site-muted); font-size: 11px; }
+
+.project-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+
+.project-art {
+  aspect-ratio: 1.15;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: white;
+  font-size: 25px;
+  background: linear-gradient(145deg,var(--accent),#f9a8d4);
+}
+
+.project h4 { font-size: 10px; margin: 7px 0 3px; }
+.project small { color: var(--site-muted); font-size: 9px; }
+
+.site-footer {
+  padding: 15px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--accent);
+  color: white;
+  font-size: 9px;
+}
+
+.toast {
+  position: fixed;
+  z-index: 20;
+  bottom: 20px;
+  left: 50%;
+  transform: translate(-50%,15px);
+  opacity: 0;
+  pointer-events: none;
+  padding: 12px 17px;
+  border-radius: 10px;
+  background: #f4f4f5;
+  color: #111827;
+  font-size: 13px;
+  transition: .2s;
+}
+
+.toast.show { opacity: 1; transform: translate(-50%,0); }
+
+.page-footer {
+  text-align: center;
+  padding: 0 15px 25px;
+  color: #e0e7ff;
+  font-size: 12px;
+}
+
+@media (min-width:1200px) {
+  .saturation,.hue { height: 285px; }
+}
+
+@media (max-width:850px) {
+  .workspace { grid-template-columns: 1fr; padding: 0 13px 25px; }
+  .topbar { padding: 20px 14px; }
+  .tagline { display: none; }
+}
+
+@media (max-width:420px) {
+  .panel { padding: 12px; }
+  .saturation,.hue { height: 215px; }
+  .site-nav { padding: 11px; }
+  .site-links { gap: 7px; font-size: 9px; }
+  .hero { padding: 20px 12px; }
+  .features { padding-left: 9px; padding-right: 9px; gap: 5px; }
+  .feature { padding: 8px 5px; }
+}
+</style>
+</head>
+
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">🟦</div>
+    <div>
+      <h1>ColorLab</h1>
+      <div class="subtitle">Pick a colour. Preview it. Use it anywhere.</div>
+    </div>
+  </div>
+  <div class="tagline">Choose · Copy · Create</div>
+</header>
+
+<main class="workspace">
+
+<!-- COLOUR PICKER -->
+<section class="panel">
+  <div class="section-title">Colour Studio</div>
+
+  <div class="picker-layout">
+    <div class="saturation" id="sat" aria-label="Colour selection area">
+      <div class="marker" id="marker"></div>
+    </div>
+    <input id="hue" class="hue" type="range" min="0" max="359"
+           value="239" aria-label="Hue">
+  </div>
+
+  <div class="color-fields">
+    <div>
+      <label class="label" for="colorInput">Colour picker</label>
+      <input type="color" id="colorInput" value="#6366f1">
+    </div>
+    <div>
+      <label class="label" for="hex">HEX code</label>
+      <div class="hex-row">
+        <input type="text" id="hex" value="#6366F1" maxlength="7">
+        <button class="btn" id="copyHex">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="swatch" id="swatch"></div>
+
+  <div class="stats">
+    <div class="stat"><span>RGB</span><span id="rgb"></span></div>
+    <div class="stat"><span>HSL</span><span id="hsl"></span></div>
+    <div class="stat"><span>HEX</span><span id="hexDisplay"></span></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-title">Quick Presets</div>
+  <div class="presets" id="presets"></div>
+
+  <div class="divider"></div>
+  <div class="section-title">
+    <span>⌘ CSS Output</span>
+    <button class="btn" data-copy="css">Copy CSS</button>
+  </div>
+  <div class="code-card"><pre id="cssCode"></pre></div>
+
+  <div class="code-card">
+    <div class="code-head">
+      <span>〰 Tailwind-style classes</span>
+      <button class="btn" data-copy="tailwind">Copy</button>
+    </div>
+    <pre id="tailwindCode"></pre>
+  </div>
+
+  <div class="tip">
+    Select a colour from the square, move the hue slider, enter a HEX code, or choose a preset. The webpage preview changes instantly.
+  </div>
+</section>
+
+<!-- LIVE WEBSITE PREVIEW -->
+<section class="panel">
+  <div class="preview-head">
+    <div class="section-title" style="margin:0">◉ Live Preview</div>
+    <div class="mode-group">
+      <button class="btn mode-btn active" data-mode="light">☀ Light</button>
+      <button class="btn mode-btn" data-mode="dark">☾ Dark</button>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="browser-bar">
+      <div class="dots">
+        <span class="dot" style="background:#ff5f57"></span>
+        <span class="dot" style="background:#febc2e"></span>
+        <span class="dot" style="background:#28c840"></span>
+      </div>
+      <div class="address">your-website.com</div>
+    </div>
+
+    <div class="site" id="site">
+      <nav class="site-nav">
+        <div class="site-brand">Sprizen</div>
+        <div class="site-links">
+          <a href="#home">Home</a>
+          <a href="#about">About</a>
+          <a href="#services">Services</a>
+        </div>
+      </nav>
+
+      <section class="hero" id="home">
+        <div class="hero-grid">
+          <div>
+            <h2>Build Something <span>Amazing</span></h2>
+            <p>Great ideas deserve beautiful design. Create modern experiences your visitors will remember.</p>
+            <button class="cta" id="demoButton">Get Started →</button>
+          </div>
+          <div class="art">
+            <div class="art-inner">◈</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="features" id="services">
+        <article class="feature">
+          <div class="feature-icon">ϟ</div>
+          <h3>Fast</h3>
+          <p>Lightning-fast performance for your projects.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon">⬟</div>
+          <h3>Secure</h3>
+          <p>Built with care and modern standards.</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon">☆</div>
+          <h3>Modern</h3>
+          <p>Clean design for a better experience.</p>
+        </article>
+      </section>
+
+      <section class="work" id="about">
+        <h3>Our Work</h3>
+        <p>A few ideas brought to life</p>
+        <div class="project-grid">
+          <article class="project">
+            <div class="project-art">⌘</div>
+            <h4>Project One</h4><small>Web Development</small>
+          </article>
+          <article class="project">
+            <div class="project-art">✧</div>
+            <h4>Project Two</h4><small>UI/UX Design</small>
+          </article>
+          <article class="project">
+            <div class="project-art">◉</div>
+            <h4>Project Three</h4><small>Creative Tech</small>
+          </article>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <span>© 2026 Sprizen</span>
+        <span>GitHub · Instagram</span>
+      </footer>
+    </div>
+  </div>
+
+  <div class="tip">
+    👁 Your background image stays behind the interface. The sample webpage has its own background so you can clearly judge your selected colour.
+  </div>
+</section>
+</main>
+
+<footer class="page-footer">ColorLab · Choose · Copy</footer>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const sat = $("sat");
+const marker = $("marker");
+const hue = $("hue");
+const hex = $("hex");
+
+let H = 239, S = 59, V = 95;
+let currentHex = "#6366F1";
+let toastTimer;
+
+const presetColors = [
+  "#6366F1","#4F46E5","#06B6D4","#10B981",
+  "#F59E0B","#EC4899","#EF4444","#334155",
+  "#8B5CF6","#14B8A6","#84CC16","#F97316",
+  "#FFFFFF","#111827","#000000"
+];
+
+function hsvToRgb(h,s,v) {
+  s/=100; v/=100;
+  const c=v*s;
+  const x=c*(1-Math.abs((h/60)%2-1));
+  const m=v-c;
+  let r=0,g=0,b=0;
+
+  if(h<60) [r,g,b]=[c,x,0];
+  else if(h<120) [r,g,b]=[x,c,0];
+  else if(h<180) [r,g,b]=[0,c,x];
+  else if(h<240) [r,g,b]=[0,x,c];
+  else if(h<300) [r,g,b]=[x,0,c];
+  else [r,g,b]=[c,0,x];
+
+  return [r,g,b].map(n=>Math.round((n+m)*255));
+}
+
+function rgbToHex(rgb) {
+  return "#"+rgb.map(n=>n.toString(16).padStart(2,"0")).join("").toUpperCase();
+}
+
+function hexToRgb(value) {
+  let v=value.trim().replace(/^#/,"");
+  if(/^[0-9a-f]{3}$/i.test(v)) {
+    v=v.split("").map(c=>c+c).join("");
+  }
+  if(!/^[0-9a-f]{6}$/i.test(v)) return null;
+  return [
+    parseInt(v.slice(0,2),16),
+    parseInt(v.slice(2,4),16),
+    parseInt(v.slice(4,6),16)
+  ];
+}
+
+function rgbToHsl(rgb) {
+  let [r,g,b]=rgb.map(n=>n/255);
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  const d=max-min;
+  let h=0,s=0,l=(max+min)/2;
+
+  if(d!==0) {
+    s=d/(1-Math.abs(2*l-1));
+    if(max===r) h=60*(((g-b)/d)%6);
+    else if(max===g) h=60*((b-r)/d+2);
+    else h=60*((r-g)/d+4);
+  }
+
+  if(h<0) h+=360;
+  return [Math.round(h),Math.round(s*100),Math.round(l*100)];
+}
+
+function updateSaturationBackground() {
+  sat.style.background =
+    `linear-gradient(to top,#000,transparent),
+     linear-gradient(to right,#fff,transparent),
+     hsl(${H},100%,50%)`;
+}
+
+function updateMarker() {
+  marker.style.left=S+"%";
+  marker.style.top=(100-V)+"%";
+}
+
+function render(rgb) {
+  currentHex=rgbToHex(rgb);
+  hex.value=currentHex;
+  $("colorInput").value=currentHex;
+  $("swatch").style.background=currentHex;
+
+  $("rgb").textContent=rgb.join(", ");
+  $("hsl").textContent=rgbToHsl(rgb).join("°, ")+"%";
+  const hsl=rgbToHsl(rgb);
+  $("hsl").textContent=`${hsl[0]}°, ${hsl[1]}%, ${hsl[2]}%`;
+  $("hexDisplay").textContent=currentHex;
+
+  document.documentElement.style.setProperty("--accent",currentHex);
+
+  $("cssCode").textContent=
+`:root {
+  --primary: ${currentHex};
+}
+
+.button {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+
+.highlight {
+  color: var(--primary);
+  border-color: var(--primary);
+}`;
+
+  $("tailwindCode").textContent=
+`bg-[${currentHex}]
+text-[${currentHex}]
+border-[${currentHex}]
+hover:bg-[${currentHex}]
+from-[${currentHex}] to-[#4F46E5]`;
+
+  updatePresets();
+}
+
+function setFromHSV() {
+  render(hsvToRgb(H,S,V));
+}
+
+function setFromHex(value) {
+  const rgb=hexToRgb(value);
+  if(!rgb) return false;
+
+  let [r,g,b]=rgb.map(n=>n/255);
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  const d=max-min;
+  let h=0;
+
+  if(d!==0) {
+    if(max===r) h=60*(((g-b)/d)%6);
+    else if(max===g) h=60*((b-r)/d+2);
+    else h=60*((r-g)/d+4);
+  }
+  if(h<0) h+=360;
+
+  H=Math.round(h);
+  S=max===0 ? 0 : Math.round(d/max*100);
+  V=Math.round(max*100);
+
+  hue.value=H;
+  updateSaturationBackground();
+  updateMarker();
+  render(rgb);
+  return true;
+}
+
+function updatePresets() {
+  const container=$("presets");
+  container.replaceChildren();
+
+  presetColors.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="preset"+(c===currentHex?" active":"");
+    b.style.background=c;
+    b.title=c;
+    b.setAttribute("aria-label","Select "+c);
+    b.addEventListener("click",()=>setFromHex(c));
+    container.appendChild(b);
+  });
+}
+
+function pickPosition(e) {
+  const rect=sat.getBoundingClientRect();
+  S=Math.round(Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width))*100);
+  V=Math.round((1-Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height)))*100);
+  updateMarker();
+  setFromHSV();
+}
+
+let dragging=false;
+
+sat.addEventListener("pointerdown",e=>{
+  dragging=true;
+  sat.setPointerCapture(e.pointerId);
+  pickPosition(e);
+});
+
+sat.addEventListener("pointermove",e=>{
+  if(dragging) pickPosition(e);
+});
+
+sat.addEventListener("pointerup",()=>dragging=false);
+sat.addEventListener("pointercancel",()=>dragging=false);
+
+hue.addEventListener("input",()=>{
+  H=Number(hue.value);
+  updateSaturationBackground();
+  setFromHSV();
+});
+
+hex.addEventListener("input",()=>{
+  if(setFromHex(hex.value)) return;
+});
+
+hex.addEventListener("change",()=>{
+  if(!setFromHex(hex.value)) hex.value=currentHex;
+});
+
+$("colorInput").addEventListener("input",e=>{
+  setFromHex(e.target.value);
+});
+
+document.querySelectorAll("[data-mode]").forEach(button=>{
+  button.addEventListener("click",()=>{
+    $("site").classList.toggle("dark",button.dataset.mode==="dark");
+    document.querySelectorAll("[data-mode]").forEach(b=>{
+      b.classList.toggle("active",b===button);
+    });
+  });
+});
+
+function showToast(message) {
+  $("toast").textContent=message;
+  $("toast").classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>$("toast").classList.remove("show"),1800);
+}
+
+async funct
